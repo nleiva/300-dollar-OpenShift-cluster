@@ -1,3 +1,5 @@
+# My 300-dollar OpenShift cluster
+
 I wanted to run OpenShift on the smallest form factor I could. This is what worked for me.
 
 My understanding is that there are at least three OpenShift flavors to cover different on-prem use cases. These are the hardware requirements for each one.
