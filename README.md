@@ -81,6 +81,89 @@ You need a USB stick that the server can boot from. I use [Fedora Media Writer](
 To tell the server to boot from the USB stick, you need to press **F12** after you power it on to get to the boot menu. Then select USB and let it run.
 
 <p align="center">
-  <img title="Boot menu" src="static/boot_menu.png"><br>
+  <img title="Boot menu" src="static/boot_menu.jpg"><br>
   <b>Boot menu</b><br>
 </p>
+
+However, this server in particular has WiFi, which we need to disable to avoid kernel panics. So, in the boot menu, I selected **Enter Setup** first. In **Network Setup** changed **Wireless LAN** to *Disabled*.
+
+<p align="center">
+  <img title="BIOS Network setup" src="static/bios_net.jpg"><br>
+  <b>BIOS Network setup</b><br>
+</p>
+
+After that, you can safely boot from the USB stick. The host will eventually show up as ready to install in the assisted installer interface:
+
+<p align="center">
+  <img title="Host discovered" src="static/ready.png"><br>
+  <b>Host discovered</b><br>
+</p>
+
+Before you proceed with the installation, you can select the IP address allocation for the cluster's internal networks. I went with the defaults (`10.128.0.0/14`, `172.30.0.0/16`) and I selected dual-stack support to leverage IPv6 (`fd01::/48`, `fd02::/112`).
+
+<p align="center">
+  <img title="Installing software on node" src="static/installing.png"><br>
+  <b>Installing software on node</b><br>
+</p>
+
+After this, the installer goes ahead and takes care of all the rest. You no longer need to look at the server screen.
+
+If hosts in your home network want to access any of the services you deploy in OpenShift, they will need to know how to reach the cluster internal networks the installer just configured (`10.128.0.0/14`, `172.30.0.0/16`, `fd01::/48`, and `fd02::/112`). There are ways to do this dynamically, but for this example, I can simply create static routes in the Gateway pointing to the server:
+
+<p align="center">
+  <img title="Configuring routing" src="static/static.png"><br>
+  <b>Configuring routing</b><br>
+</p>
+
+## Installing the OpenShift CLI
+
+We can check if everything is working from your computer with the [OpenShift CLI](https://docs.openshift.com/container-platform/4.12/cli_reference/openshift_cli/getting-started-cli.html#installing-openshift-cli). You can download this utility from the OpenShift console. 
+
+But first, from the cluster view, download your **kubeconfig** by clicking on the *Download kubeconfig* button and also copy the password to access the console (user `kubeadmin`).
+
+<p align="center">
+  <img title="Cluster view" src="static/in_cluster.png"><br>
+  <b>Cluster view</b><br>
+</p>
+
+Then click on the ‘Open Console’ button or go to the URL *https://console-openshift-console.apps.<cluster_name>.<base_domain>*, which in this example is: *https://console-openshift-console.apps.in.lab.home/*.  
+
+From the web console, click on **?** to see the link to **Command line tools** or go to *https://console-openshift-console.apps.<cluster_name>.<base_domain>/command-line-tools*.
+
+After you download the binary for your computer's operating system, move it to a location on your computer's PATH, so you can run it from anywhere. In this example I did the following:
+
+```bash
+$ mv ~/Downloads/oc-4.12.2-linux/* ~/bin
+```
+
+To authenticate with the Kubernetes API you need to move your **kubeconfig** to `~/.kube/config`.
+
+```bash
+$ mv ~/Downloads/kubeconfig ~/.kube/config
+```
+
+## Enjoy OpenShift
+
+If you got here, you should be able to contact the cluster from your computer.
+
+```bash
+$ oc cluster-info
+Kubernetes control plane is running at https://api.in.lab.home:6443
+```
+
+You can check the status of the node with `oc get nodes`.
+
+```bash
+$ oc get nodes
+NAME         	STATUS   ROLES                     	AGE	VERSION
+host3.lab.home   Ready	control-plane,master,worker   152m   v1.25.4+a34b9e9
+```
+
+For more commands, check the [CLI reference](https://docs.openshift.com/container-platform/4.12/cli_reference/openshift_cli/developer-cli-commands.html).
+
+## Conclusions
+The installation process has come a long way, making it suitable for even a $300-dollar server. 
+
+In the next post, I’ll show how to scale the Ansible Automation Platform with OpenShift.
+
+Thanks to Chris Keller and Juan Jose Floristan for their support in setting up my single-node cluster. I would still be banging my head against the wall if it wasn’t for them.
